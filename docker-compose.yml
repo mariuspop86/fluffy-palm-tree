@@ -3,11 +3,7 @@ version: '3.8'
 services:
   db:
     image: mysql:5.7
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_PASSWORD=heatmap
-      - MYSQL_DATABASE=heatmap
-      - MYSQL_USER=heatmap
+    env_file: .env
   web:
     build: .
     ports:
