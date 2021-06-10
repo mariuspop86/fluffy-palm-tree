@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\Customer;
+use App\Services\CustomerService;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -17,11 +17,9 @@ class CustomerController extends AbstractFOSRestController
      *
      * @return Response
      */
-    public function getCustomers(): Response
+    public function getCustomers(CustomerService $customerService): Response
     {
-        $customers = $this->getDoctrine()
-            ->getRepository(Customer::class)
-            ->findAll();
+        $customers = $customerService->getCustomers();
         
         return $this->json(['customers' => $customers]);
     }

@@ -21,7 +21,7 @@ class CustomerService
     }
 
     /**
-     * @param $id
+     * @param int $id
      *
      * @return Customer
      *
@@ -35,5 +35,20 @@ class CustomerService
         }
         
         return $customer;
+    }
+
+    public function getCustomers(): array
+    {
+        $customers = $this->customerRepository->findAll();
+
+        $result = [];
+        foreach ($customers as $customer) {
+            $result[] = [
+                'id' => $customer->getId(),
+                'name' => $customer->getName(),
+            ];
+        }
+
+        return $result;
     }
 }
