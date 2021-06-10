@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Heatmap;
 use App\Services\HeatmapService;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,6 +14,31 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class HeatmapController extends AbstractFOSRestController
 {
+    /**
+     * @Route("/heatmap", name="get_heatmap", methods={"GET"})
+     *
+     * @param Request $request
+     *
+     * @return Response
+     */
+    public function getHeatmap(Request $request): Response
+    {
+        $heatmap = $this->getDoctrine()
+            ->getRepository(Heatmap::class)
+            ->findAll();
+        $result = [];
+        
+        foreach ($heatmap as $item) {
+            $result[] = [
+                'id' => $item->getId(),
+                'link' => $item->getLink(),
+                'customer' => $item->getCustomer()->getName(),                
+                'time' => $item->getCreatedAt(),                
+            ];
+        }
+        
+        return $this->json(['customers' => $result]);
+    }
     /**
      * @Route("/hits/link", name="get_hits_link", methods={"GET"})
      *
