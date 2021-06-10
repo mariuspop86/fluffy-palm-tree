@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_PASSWORD=heatmap
+      - MYSQL_DATABASE=heatmap
+      - MYSQL_USER=heatmap
+  web:
+    build: .
+    ports:
+      - 8880:80
+    volumes:
+      - ".:/var/www/"
