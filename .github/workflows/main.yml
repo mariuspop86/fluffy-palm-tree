@@ -17,13 +17,9 @@ jobs:
         with:
           mysql version: '5.7'
           mysql database: 'heatmap_test'
-          mysql root password: 'root'
           mysql user: 'heatmap'
           mysql password: 'heatmap'
-          
-      - name: Print env
-        run: prinvenv
-        
+              
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
       
