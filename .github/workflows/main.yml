@@ -33,7 +33,7 @@ jobs:
         run: php bin/console doc:mig:mig --no-interaction --env=test
 
       - name: Load fixture
-        run: bin/console doc:fix:load --no-interaction --group=APP --group=TEST
+        run: bin/console doc:fix:load --no-interaction --group=APP --group=TEST --env=test
 
       - name: Run tests
         run: php ./vendor/bin/phpunit
