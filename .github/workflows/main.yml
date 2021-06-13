@@ -16,13 +16,13 @@ jobs:
       - uses: samin/mysql-action@v1
         with:
           mysql version: '5.7'
-          mysql database: 'heatmap_test'
-          mysql user: 'heatmap'
-          mysql password: 'heatmap'
+          mysql database: ${{ secrets.TEST_DATABASE }}
+          mysql user: ${{ secrets.DATABASE_USER }}
+          mysql password: ${{ secrets.DATABASE_PASS }}
               
       - name: Wait for MYSQL
         run: |
-          while ! mysqladmin ping --host=127.0.0.1 --password=heatmap --silent; do
+          while ! mysqladmin ping --host=127.0.0.1 --password=${{ secrets.DATABASE_PASS }} --silent; do
             sleep 1
           done
             
