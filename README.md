@@ -1,5 +1,5 @@
 ## HEATMAP APP rest API
-This is the heatmap app
+This is the heatmap app [![CI](https://github.com/mariuspop86/fluffy-palm-tree/actions/workflows/main.yml/badge.svg)](https://github.com/mariuspop86/fluffy-palm-tree/actions/workflows/main.yml)
 ### Instalation
 > Requirements: git, docker, docker-compose
 
