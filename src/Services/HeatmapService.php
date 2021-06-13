@@ -3,18 +3,15 @@
 namespace App\Services;
 
 use App\Entity\Heatmap;
+use App\Model\CustomerJourneyModel;
 use App\Model\HeatmapModel;
 use App\Model\HitModel;
 use App\Repository\HeatmapRepository;
-use App\Traits\RequestTrait;
-use App\Transformer\HeatmapTransformer;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class HeatmapService
 {
-    use RequestTrait;
     /**
      * @var CustomerService
      */
@@ -23,14 +20,6 @@ class HeatmapService
      * @var LinkService
      */
     private $linkService;
-    /**
-     * @var ValidatorInterface
-     */
-    private $validator;
-    /**
-     * @var HeatmapTransformer
-     */
-    private $heatmapTransformer;
     /**
      * @var EntityManagerInterface
      */
@@ -46,15 +35,11 @@ class HeatmapService
     public function __construct(
         CustomerService $customerService,
         LinkService $linkService,
-        ValidatorInterface $validator,
-        HeatmapTransformer $heatmapTransformer,
         EntityManagerInterface $entityManager,
         HeatmapRepository $heatmapRepository
     ) {
         $this->customerService = $customerService;
         $this->linkService = $linkService;
-        $this->validator = $validator;
-        $this->heatmapTransformer = $heatmapTransformer;
         $this->entityManager = $entityManager;
         $this->heatmapRepository = $heatmapRepository;
     }
@@ -62,58 +47,78 @@ class HeatmapService
     /**
      * @throws \Exception
      */
-    public function getHitsLink(Request $request): array
+    public function getHitsLink(HitModel $hitModel): array
     {
-        $hitModel = $this->heatmapTransformer->convertDataToHitModel($request);
-        $this->validateHitModel($hitModel);
-        
-        $result = $this->heatmapRepository->findLinkHitsByRange(
-            new \DateTime($hitModel->getFrom()),
-            new \DateTime($hitModel->getTo())
+        return $this->heatmapRepository->findLinkHitsByRange(
+            new DateTime($hitModel->getFrom()),
+            new DateTime($hitModel->getTo())
         );
-        
-        return $result;
     }
 
     /**
      * @throws \Exception
      */
-    public function getHitsLinkTypes(Request $request): array
+    public function getHitsLinkTypes(HitModel $hitModel): array
     {
-        $hitModel = $this->heatmapTransformer->convertDataToHitModel($request);
-        $this->validateHitModel($hitModel);
-
-        $result = $this->heatmapRepository->findLinkTypeHitsByRange(
-            new \DateTime($hitModel->getFrom()),
-            new \DateTime($hitModel->getTo())
+        return $this->heatmapRepository->findLinkTypeHitsByRange(
+            new DateTime($hitModel->getFrom()),
+            new DateTime($hitModel->getTo())
         );
-
-        return $result;
     }
     
     /**
      * @throws \Exception
      */
-    public function getHeatmapByCustomer(Request $request): array
+    public function getJourneyByCustomer(CustomerJourneyModel $customerJourneyModel): array
     {
-        $customer = $this->customerService->getCustomerById($request->get('customer_id'));
+        $journey = $this->getJourneyByCustomerQueryResult($customerJourneyModel->getCustomerId());
 
-        $result = $this->heatmapRepository->findHeatmapByCustomer(
-            $customer->getId()
-        );
+        $result = [];
+        foreach ($journey as $key => $item) {
+            $item['accessed'] = $item['createdAt']->format('Y-m-d h:m:s');
+            unset($item['createdAt']);
+            $result[$key] = $item;
+        }
 
         return $result;
     }
 
     /**
+     * @note: This function will work fine for a small customer base, 
+     * but because there is a query for each customer it will be an issue for a large customer base.
+     * A solution to the notice above would be generate the similar journey by a cron,
+     * other solution are possible but this is the first one I can think of.
+     * 
      * @throws \Exception
      */
-    public function saveHeatmap(Request $request)
+    public function getSimilarJourneyByCustomer(CustomerJourneyModel $customerJourneyModel): array
     {
-        $content = $this->getValidatedRequestContent($request->getContent());
-        $heatmapModel = $this->heatmapTransformer->convertDataToHeatmapModel($content);
-        $this->validateHeatmapModel($heatmapModel);
+        $journey = $this->getJourneyByCustomerQueryResult($customerJourneyModel->getCustomerId());
+
+        $links = $this->getLinksFromResult($journey);
+
+        $uniqueLinks = array_unique($links);
         
+        $similarJourneyCustomers = $this->heatmapRepository->getSimilarJourneyUniqueCustomers(
+            $customerJourneyModel->getCustomerId(), 
+            $uniqueLinks
+        );
+        
+        $customerIds = []; 
+        foreach ($similarJourneyCustomers as $item) {
+            $customerJourneys = $this->heatmapRepository->getJourneyByCustomer($item['id']);
+            $similarLinks =  $this->getLinksFromResult($customerJourneys);
+            $this->getSimilarCustomers($customerIds, $item['id'], $links, $similarLinks);
+        }
+
+        return $customerIds;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function saveHeatmap(HeatmapModel $heatmapModel)
+    {
         $customer = $this->customerService->getCustomerById($heatmapModel->getCustomerId());
         $linkType = $this->linkService->getLinkTypeById($heatmapModel->getLinkId());
         $heatmap = new Heatmap();
@@ -128,32 +133,33 @@ class HeatmapService
     /**
      * @throws \Exception
      */
-    private function validateHeatmapModel(HeatmapModel $heatmapModel)
+    protected function getJourneyByCustomerQueryResult(int $customerId): array
     {
-        $errors = $this->validator->validate($heatmapModel);
-        if (count($errors) == 0) {
-            return;
-        }
-        $message = [];
-        foreach ($errors as $error) {
-            $message[$error->getPropertyPath()] = $error->getMessage();
-        }
-        throw new \Exception(json_encode($message));
-    }
+        $customer = $this->customerService->getCustomerById($customerId);
 
-    /**
-     * @throws \Exception
-     */
-    private function validateHitModel(HitModel $hitModel)
+        return $this->heatmapRepository->getJourneyByCustomer(
+            $customer->getId()
+        );
+    }
+    
+    protected function getLinksFromResult(array $queryResult): array 
     {
-        $errors = $this->validator->validate($hitModel);
-        if (count($errors) == 0) {
-            return;
+        $links = [];
+        foreach ($queryResult as $item) {
+            $links[] = $item['link'];
         }
-        $message = [];
-        foreach ($errors as $error) {
-            $message[$error->getPropertyPath()] = $error->getMessage();
+        
+        return $links;
+    }
+    
+    protected function getSimilarCustomers(array &$customerIds, int $customerId, array $links, array $similarLinks)
+    {
+        $similarLinks = implode(',', $similarLinks);
+        $links = implode(',', $links);
+        if (str_contains($similarLinks, $links)) {
+            $customerIds[] = [
+                'customer_id' => $customerId
+            ];
         }
-        throw new \Exception(json_encode($message));
     }
 }

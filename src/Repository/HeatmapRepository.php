@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Customer;
 use App\Entity\Heatmap;
 use App\Entity\LinkType;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -25,10 +26,10 @@ class HeatmapRepository extends ServiceEntityRepository
      * @return Heatmap[] Returns an array of Heatmap objects
      * @throws \Exception
      */
-    public function findLinkHitsByRange(\DateTime $from, \DateTime $to)
+    public function findLinkHitsByRange(DateTime $from, DateTime $to): array
     {
-        $from = new \DateTime($from->format("Y-m-d")." 00:00:00");
-        $to   = new \DateTime($to->format("Y-m-d")." 23:59:59");
+        $from = new DateTime($from->format("Y-m-d")." 00:00:00");
+        $to   = new DateTime($to->format("Y-m-d")." 23:59:59");
         
         return $this->createQueryBuilder('h')
             ->select('count(h.id) as hits, h.link')
@@ -43,10 +44,10 @@ class HeatmapRepository extends ServiceEntityRepository
     /**
      * @return Heatmap[] Returns an array of Heatmap objects
      */
-    public function findLinkTypeHitsByRange(\DateTime $from, \DateTime $to): array
+    public function findLinkTypeHitsByRange(DateTime $from, DateTime $to): array
     {
-        $from = new \DateTime($from->format("Y-m-d")." 00:00:00");
-        $to   = new \DateTime($to->format("Y-m-d")." 23:59:59");
+        $from = new DateTime($from->format("Y-m-d")." 00:00:00");
+        $to   = new DateTime($to->format("Y-m-d")." 23:59:59");
 
         return $this->createQueryBuilder('h')
             ->select('count(h.id) as hits, lt.id, lt.name')
@@ -60,9 +61,9 @@ class HeatmapRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return Heatmap[] Returns an array of Heatmap objects
+     * @return Heatmap[] Returns an array of links
      */
-    public function findHeatmapByCustomer($customer_id): array
+    public function getJourneyByCustomer(int $customer_id): array
     {
         return $this->createQueryBuilder('h')
             ->select('h.link, h.createdAt')
@@ -70,6 +71,23 @@ class HeatmapRepository extends ServiceEntityRepository
             ->andWhere('c.id=:customer_id')
             ->setParameter('customer_id', $customer_id)
             ->orderBy('h.createdAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+    
+    /**
+     * @return Heatmap[] Returns an array of links
+     */
+    public function getSimilarJourneyUniqueCustomers(int $customer_id, array $links): array
+    {
+        return $this->createQueryBuilder('h')
+            ->select('c.id')
+            ->innerJoin(Customer::class, 'c', 'WITH', 'h.customer=c')
+            ->andWhere('c.id <> :customer_id')
+            ->andWhere('h.link in (:links)')
+            ->setParameter('customer_id', $customer_id)
+            ->setParameter('links', implode(',', $links))
+            ->groupBy('c.id')
             ->getQuery()
             ->getResult();
     }

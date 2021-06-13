@@ -4,9 +4,18 @@ services:
   db:
     image: mysql:5.7
     env_file: .env
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data:/var/lib/mysql
+      - ./docker/db/init:/docker-entrypoint-initdb.d
   web:
     build: .
     ports:
       - 8880:80
     volumes:
-      - ".:/var/www/"
+      - ".:/var/www/html"
+  adminer:
+    image: adminer
+    ports:
+    - 18080:8080

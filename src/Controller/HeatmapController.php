@@ -3,8 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\Heatmap;
+use App\Model\CustomerJourneyModel;
+use App\Model\HeatmapModel;
+use App\Model\HitModel;
 use App\Services\HeatmapService;
-use FOS\RestBundle\Controller\AbstractFOSRestController;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -12,16 +15,16 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * @Route("/api", name="api_")
  */
-class HeatmapController extends AbstractFOSRestController
+class HeatmapController extends BaseController
 {
     /**
-     * @Route("/heatmap", name="get_heatmap", methods={"GET"})
+     * @Route("/heatmaps", name="get_heatmap", methods={"GET"})
      *
      * @param Request $request
      *
      * @return Response
      */
-    public function getHeatmap(Request $request): Response
+    public function getHeatmap(): Response
     {
         $heatmap = $this->getDoctrine()
             ->getRepository(Heatmap::class)
@@ -39,8 +42,9 @@ class HeatmapController extends AbstractFOSRestController
         
         return $this->json(['customers' => $result]);
     }
+
     /**
-     * @Route("/hits/link", name="get_hits_link", methods={"GET"})
+     * @Route("/heatmaps/hits/link", name="get_hits_link", methods={"GET"})
      *
      * @param Request                      $request
      * @param \App\Services\HeatmapService $heatmapService
@@ -50,8 +54,12 @@ class HeatmapController extends AbstractFOSRestController
     public function getHitsLink(Request $request, HeatmapService $heatmapService): Response
     {
         try {
-            $result = $heatmapService->getHitsLink($request);
-        } catch (\Exception $error) {
+            $model = $this->getModelFromRequest(HitModel::class, $request);
+            $result = $heatmapService->getHitsLink($model);
+        } catch (Exception $error) {
+            var_dump($error->getMessage());
+            var_dump($error->getLine());
+            var_dump($error->getFile());
             return $this->json(json_decode($error->getMessage()), Response::HTTP_BAD_REQUEST);
         }
 
@@ -59,7 +67,7 @@ class HeatmapController extends AbstractFOSRestController
     }
 
     /**
-     * @Route("/hits/linkType", name="get_hits_link_type", methods={"GET"})
+     * @Route("/heatmaps/hits/linkType", name="get_hits_link_type", methods={"GET"})
      *
      * @param Request                      $request
      * @param \App\Services\HeatmapService $heatmapService
@@ -69,8 +77,9 @@ class HeatmapController extends AbstractFOSRestController
     public function getHitsLinkTypes(Request $request, HeatmapService $heatmapService): Response
     {
         try {
-            $result = $heatmapService->getHitsLinkTypes($request);
-        } catch (\Exception $error) {
+            $model = $this->getModelFromRequest(HitModel::class, $request);
+            $result = $heatmapService->getHitsLinkTypes($model);
+        } catch (Exception $error) {
             return $this->json(json_decode($error->getMessage()), Response::HTTP_BAD_REQUEST);
         }
 
@@ -78,18 +87,39 @@ class HeatmapController extends AbstractFOSRestController
     }
     
     /**
-     * @Route("/heatmaps/customer/{customer_id}", name="get_heatmap_by_customer", methods={"GET"}, requirements={"customer_id"="\d+"})
+     * @Route("/heatmaps/journey/customer/{id}", name="get_heatmap_by_customer", methods={"GET"}, requirements={"customer_id"="\d+"})
      *
      * @param Request                      $request
      * @param \App\Services\HeatmapService $heatmapService
      *
      * @return Response
      */
-    public function getHeatmapByCustomer(Request $request, HeatmapService $heatmapService): Response
+    public function getJourneyByCustomer(Request $request, HeatmapService $heatmapService): Response
     {
         try {
-            $result = $heatmapService->getHeatmapByCustomer($request);
-        } catch (\Exception $error) {
+            $model = $this->getModelFromRequest(CustomerJourneyModel::class, $request);
+            $result = $heatmapService->getJourneyByCustomer($model);
+        } catch (Exception $error) {
+            return $this->json(json_decode($error->getMessage()), Response::HTTP_BAD_REQUEST);
+        }
+
+        return $this->json($result);
+    }
+
+    /**
+     * @Route("/heatmaps/similar-journey/customer/{id}", name="get_similar_heatmap_by_customer", methods={"GET"}, requirements={"customer_id"="\d+"})
+     *
+     * @param Request                      $request
+     * @param \App\Services\HeatmapService $heatmapService
+     *
+     * @return Response
+     */
+    public function getSimilarJourneyByCustomer(Request $request, HeatmapService $heatmapService): Response
+    {
+        try {
+            $model = $this->getModelFromRequest(CustomerJourneyModel::class, $request);
+            $result = $heatmapService->getSimilarJourneyByCustomer($model);
+        } catch (Exception $error) {
             return $this->json(json_decode($error->getMessage()), Response::HTTP_BAD_REQUEST);
         }
 
@@ -97,7 +127,7 @@ class HeatmapController extends AbstractFOSRestController
     }
     
     /**
-     * @Route("/heatmap", name="save_heatmap", methods={"POST"})
+     * @Route("/heatmaps", name="save_heatmap", methods={"POST"})
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @param \App\Services\HeatmapService              $heatmapService
@@ -107,8 +137,9 @@ class HeatmapController extends AbstractFOSRestController
     public function saveHeatmap(Request $request, HeatmapService $heatmapService): Response
     {
         try {
-            $heatmapService->saveHeatmap($request);
-        } catch (\Exception $error) {
+            $model = $this->getModelFromRequest(HeatmapModel::class, $request);
+            $heatmapService->saveHeatmap($model);
+        } catch (Exception $error) {
             return $this->json(json_decode($error->getMessage()), Response::HTTP_BAD_REQUEST);
         }
             
