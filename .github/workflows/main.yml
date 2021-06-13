@@ -20,6 +20,12 @@ jobs:
           mysql user: 'heatmap'
           mysql password: 'heatmap'
               
+      - name: Wait for MYSQL
+        run: |
+          while ! mysqladmin ping --host=127.0.0.1 --password=heatmap --silent; do
+            sleep 1
+          done
+            
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
       
