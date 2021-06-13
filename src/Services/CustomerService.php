@@ -4,13 +4,11 @@ namespace App\Services;
 
 use App\Entity\Customer;
 use App\Repository\CustomerRepository;
+use Exception;
 
 class CustomerService
 {
-    /**
-     * @var CustomerRepository
-     */
-    private $customerRepository;
+    private CustomerRepository $customerRepository;
 
     /**
      * CustomerService constructor.
@@ -25,13 +23,13 @@ class CustomerService
      *
      * @return Customer
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function getCustomerById(int $id): Customer
     {
         $customer = $this->customerRepository->find($id);
         if (!$customer) {
-            throw new \Exception(json_encode('Customer not found'));
+            throw new Exception(json_encode('Customer not found'));
         }
         
         return $customer;

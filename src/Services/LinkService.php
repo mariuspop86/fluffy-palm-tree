@@ -4,13 +4,11 @@ namespace App\Services;
 
 use App\Entity\LinkType;
 use App\Repository\LinkTypeRepository;
+use Exception;
 
 class LinkService
 {
-    /**
-     * @var LinkTypeRepository
-     */
-    private $linkTypeRepository;
+    private LinkTypeRepository $linkTypeRepository;
 
     /**
      * CustomerService constructor.
@@ -25,13 +23,13 @@ class LinkService
      *
      * @return LinkType
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function getLinkTypeById(int $id): LinkType
     {
         $linkType = $this->linkTypeRepository->find($id);
         if (!$linkType) {
-            throw new \Exception(json_encode('Type not found'));
+            throw new Exception(json_encode('Type not found'));
         }
 
         return $linkType;

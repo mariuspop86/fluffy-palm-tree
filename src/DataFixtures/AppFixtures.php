@@ -4,25 +4,15 @@ namespace App\DataFixtures;
 
 use App\Entity\Customer;
 use App\Entity\LinkType;
+use App\Enum\CustomerEnum;
+use App\Enum\LinkTypeEnum;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class AppFixtures extends Fixture
+class AppFixtures extends Fixture implements FixtureGroupInterface
 {
-    const LINK_TYPES = [
-        'product', 
-        'category',
-        'static-page', 
-        'checkout', 
-        'homepage'
-    ];
-
-    const CUSTOMERS = [
-        'John',
-        'Doe',
-        'Luke',
-        'Skywalker',
-    ];
+    const GROUP = 'APP';
     
     public function load(ObjectManager $manager)
     {
@@ -34,7 +24,7 @@ class AppFixtures extends Fixture
     
     private function loadLinkTypes(ObjectManager $manager) 
     {
-        foreach (self::LINK_TYPES as $type) {
+        foreach (LinkTypeEnum::LINK_TYPES as $type) {
             $linkType = new LinkType();
             $linkType->setName($type);
             $manager->persist($linkType);
@@ -43,10 +33,15 @@ class AppFixtures extends Fixture
     
     private function loadCustomer(ObjectManager $manager)
     {
-        foreach (self::CUSTOMERS as $name) {
+        foreach (CustomerEnum::CUSTOMERS as $name) {
             $customer = new Customer();
             $customer->setName($name);
             $manager->persist($customer);
         }
+    }
+
+    public static function getGroups(): array
+    {
+        return [self::GROUP];
     }
 }

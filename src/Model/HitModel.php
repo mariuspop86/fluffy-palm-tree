@@ -11,26 +11,28 @@ class HitModel implements ModelInterface
      * @Assert\Date(message="This value is not a valid date. Expected format YYYY-mm-dd")
      * @var string A "Y-m-d" formatted value
      */
-    private $from;
+    private string $from;
 
     /**
      * @Assert\NotBlank
      * @Assert\Date(message="This value is not a valid date. Expected format YYYY-mm-dd")
      * @var string A "Y-m-d" formatted value
      */
-    private $to;
+    private string $to;
     
-    public function getFrom()
+    public function getFrom(): string
     {
         return $this->from;
     }
 
     /**
-     * @param string $from
+     * @param string|null $from
      */
-    public function setFrom(string $from): void
+    public function setFrom(?string $from): void
     {
-        $this->from = $from;
+        if ($from) {
+            $this->from = $from;
+        }
     }
     
     public function getTo(): string
@@ -39,10 +41,12 @@ class HitModel implements ModelInterface
     }
 
     /**
-     * @param string $to
+     * @param string|null $to
      */
-    public function setTo(string $to): void
+    public function setTo(?string $to): void
     {
-        $this->to = $to;
+        if (isset($to)) {
+            $this->to = $to;
+        }
     }
 }

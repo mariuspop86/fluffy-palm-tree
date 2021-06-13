@@ -50,7 +50,7 @@ class HeatmapRepository extends ServiceEntityRepository
         $to   = new DateTime($to->format("Y-m-d")." 23:59:59");
 
         return $this->createQueryBuilder('h')
-            ->select('count(h.id) as hits, lt.id, lt.name')
+            ->select('count(h.id) as hits, lt.name')
             ->innerJoin(LinkType::class, 'lt', 'WITH' , 'h.linkType=lt')
             ->andWhere('h.createdAt BETWEEN :from AND :to')
             ->setParameter('from', $from)
@@ -76,12 +76,12 @@ class HeatmapRepository extends ServiceEntityRepository
     }
     
     /**
-     * @return Heatmap[] Returns an array of links
+     * @return array Returns an array of links
      */
     public function getSimilarJourneyUniqueCustomers(int $customer_id, array $links): array
     {
         return $this->createQueryBuilder('h')
-            ->select('c.id')
+            ->select('c.id, c.name')
             ->innerJoin(Customer::class, 'c', 'WITH', 'h.customer=c')
             ->andWhere('c.id <> :customer_id')
             ->andWhere('h.link in (:links)')

@@ -10,14 +10,9 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class RequestService
 {
-    /**
-     * @var ValidatorInterface
-     */
-    private $validator;
-    /**
-     * @var \App\Builder\RequestToModelBuilder
-     */
-    private $requestToModelBuilder;
+    private ValidatorInterface $validator;
+ 
+    private RequestToModelBuilder $requestToModelBuilder;
 
     /**
      * HeatmapService constructor.

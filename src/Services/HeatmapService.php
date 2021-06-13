@@ -9,25 +9,17 @@ use App\Model\HitModel;
 use App\Repository\HeatmapRepository;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 
 class HeatmapService
 {
-    /**
-     * @var CustomerService
-     */
-    private $customerService;
-    /**
-     * @var LinkService
-     */
-    private $linkService;
-    /**
-     * @var EntityManagerInterface
-     */
-    private $entityManager;
-    /**
-     * @var HeatmapRepository
-     */
-    private $heatmapRepository;
+    private CustomerService $customerService;
+    
+    private LinkService $linkService;
+    
+    private EntityManagerInterface $entityManager;
+    
+    private HeatmapRepository $heatmapRepository;
 
     /**
      * HeatmapService constructor.
@@ -45,7 +37,7 @@ class HeatmapService
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function getHitsLink(HitModel $hitModel): array
     {
@@ -56,7 +48,7 @@ class HeatmapService
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function getHitsLinkTypes(HitModel $hitModel): array
     {
@@ -67,7 +59,7 @@ class HeatmapService
     }
     
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function getJourneyByCustomer(CustomerJourneyModel $customerJourneyModel): array
     {
@@ -89,7 +81,7 @@ class HeatmapService
      * A solution to the notice above would be generate the similar journey by a cron,
      * other solution are possible but this is the first one I can think of.
      * 
-     * @throws \Exception
+     * @throws Exception
      */
     public function getSimilarJourneyByCustomer(CustomerJourneyModel $customerJourneyModel): array
     {
@@ -108,14 +100,14 @@ class HeatmapService
         foreach ($similarJourneyCustomers as $item) {
             $customerJourneys = $this->heatmapRepository->getJourneyByCustomer($item['id']);
             $similarLinks =  $this->getLinksFromResult($customerJourneys);
-            $this->getSimilarCustomers($customerIds, $item['id'], $links, $similarLinks);
+            $this->getSimilarCustomers($customerIds, $item, $links, $similarLinks);
         }
 
         return $customerIds;
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function saveHeatmap(HeatmapModel $heatmapModel)
     {
@@ -131,7 +123,7 @@ class HeatmapService
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     protected function getJourneyByCustomerQueryResult(int $customerId): array
     {
@@ -152,13 +144,14 @@ class HeatmapService
         return $links;
     }
     
-    protected function getSimilarCustomers(array &$customerIds, int $customerId, array $links, array $similarLinks)
+    protected function getSimilarCustomers(array &$customerIds, array $customer, array $links, array $similarLinks)
     {
         $similarLinks = implode(',', $similarLinks);
         $links = implode(',', $links);
         if (str_contains($similarLinks, $links)) {
             $customerIds[] = [
-                'customer_id' => $customerId
+                'customer_id' => $customer['id'],
+                'customer_name' => $customer['name'],
             ];
         }
     }

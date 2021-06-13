@@ -9,7 +9,7 @@ class CustomerJourneyModel implements ModelInterface
     /**
      * @Assert\NotBlank
      */
-    private $customer_id;
+    private int $customer_id;
 
     /**
      * @return int
