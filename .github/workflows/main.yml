@@ -16,11 +16,14 @@ jobs:
       - uses: samin/mysql-action@v1
         with:
           mysql version: '5.7'
-          mysql database: 'heatmap_test' # Optional, default value is "test". The specified database which will be create
-          mysql root password: ${{ secrets.RootPassword }} # Required if "mysql user" is empty, default is empty. The root superuser password
+          mysql database: 'heatmap_test'
+          mysql root password: 'root'
           mysql user: 'heatmap'
           mysql password: 'heatmap'
-
+          
+      - name: Print env
+        run: prinvenv
+        
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
       
