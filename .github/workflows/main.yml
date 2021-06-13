@@ -1,5 +1,3 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
 
 on:
@@ -14,6 +12,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - uses: samin/mysql-action@v1
+        with:
+          mysql version: '5.7'
+          mysql database: 'heatmap_test' # Optional, default value is "test". The specified database which will be create
+          mysql root password: ${{ secrets.RootPassword }} # Required if "mysql user" is empty, default is empty. The root superuser password
+          mysql user: 'heatmap'
+          mysql password: 'heatmap'
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
